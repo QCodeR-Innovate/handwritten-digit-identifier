@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Handwritten Digit Identifier</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h1>Handwritten Digit Identifier</h1>
+      <p>Upload an image of a handwritten digit (0–9) and let the AI identify it.</p>
+    </header>
+
+    <main class="card">
+      <div class="upload-section">
+        <label for="imageInput" class="file-label">
+          <span>Select Image</span>
+          <input
+            type="file"
+            id="imageInput"
+            accept="image/png, image/jpeg"
+            hidden
+          />
+        </label>
+        <p class="hint">Supported formats: JPEG, PNG</p>
+      </div>
+
+      <div class="preview-section">
+        <h2>Preview</h2>
+        <div class="preview-container">
+          <img id="previewImage" class="hidden" alt="Image preview" />
+          <p id="previewPlaceholder">No image selected yet.</p>
+        </div>
+      </div>
+
+      <div class="action-section">
+        <button id="predictButton" disabled>Identify Digit</button>
+      </div>
+
+      <div class="result-section">
+        <h2>Result</h2>
+        <p id="resultText">No prediction yet.</p>
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      <small>Built by Pushkar • Intern project – Handwritten Digit Identifier</small>
+    </footer>
+  </div>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
