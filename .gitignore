@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+.env
+venv/
+.venv/
+
+# Node / general
+node_modules/
+dist/
+build/
+
+# VS Code settings
+.vscode/
+
+# Mac and system files
+.DS_Store
+Thumbs.db
+# 
