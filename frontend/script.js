@@ -10,6 +10,7 @@ import {
   signOut,
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
+
 // TODO: Paste your firebaseConfig from Firebase console here:
 const firebaseConfig = {
   apiKey: "AIzaSyCwssU0kctnSS4oZsgt8qqNd3C7bY4XT50",
@@ -28,6 +29,7 @@ const auth = getAuth(app);
 const API_BASE_URL = "https://handwritten-digit-identifier.onrender.com";
 
 let selectedFile = null;
+let isLoggedIn = false;
 
 document.addEventListener("DOMContentLoaded", () => {
   // Auth-related elements
@@ -46,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const predictButton = document.getElementById("predictButton");
   const resultText = document.getElementById("resultText");
 
-  // ----- Auth: helpers -----
+  // ----- Helpers -----
   function showAuthMessage(msg) {
     authMessage.textContent = msg || "";
   }
@@ -55,17 +57,47 @@ document.addEventListener("DOMContentLoaded", () => {
     authPassword.value = "";
   }
 
-  // Listen for auth state changes
+  function resetPreview() {
+    selectedFile = null;
+    previewImage.src = "";
+    previewImage.classList.add("hidden");
+    previewPlaceholder.textContent = isLoggedIn
+      ? "No image selected yet."
+      : "Login required to use this feature.";
+    resultText.textContent = isLoggedIn
+      ? "No prediction yet."
+      : "Please log in to use digit identification.";
+    predictButton.disabled = true;
+  }
+
+  // Enable/disable prediction UI based on login state
+  function updatePredictionAccess() {
+    if (!isLoggedIn) {
+      // Lock everything
+      fileInput.disabled = true;
+      predictButton.disabled = true;
+      resetPreview();
+    } else {
+      // Allow selecting files
+      fileInput.disabled = false;
+      resetPreview();
+    }
+  }
+
+  // ----- Auth state listener -----
   onAuthStateChanged(auth, (user) => {
     if (user) {
+      isLoggedIn = true;
       authStatus.textContent = `Logged in as: ${user.email}`;
       showAuthMessage("");
     } else {
+      isLoggedIn = false;
       authStatus.textContent = "Not logged in.";
     }
+    updatePredictionAccess();
   });
 
-  // Signup
+  // ----- Auth actions -----
   signupButton.addEventListener("click", async () => {
     const email = authEmail.value.trim();
     const password = authPassword.value.trim();
@@ -85,7 +117,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Login
   loginButton.addEventListener("click", async () => {
     const email = authEmail.value.trim();
     const password = authPassword.value.trim();
@@ -105,7 +136,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Logout
   logoutButton.addEventListener("click", async () => {
     try {
       await signOut(auth);
@@ -117,30 +147,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ----- Image upload & prediction logic (same as before, slightly cleaned) -----
+  // ----- Image upload & prediction logic -----
 
   fileInput.addEventListener("change", () => {
+    if (!isLoggedIn) {
+      // Shouldn't normally happen because input is disabled, but just in case
+      fileInput.value = "";
+      alert("Please log in to use digit identification.");
+      return;
+    }
+
     const file = fileInput.files[0];
 
     if (!file) {
-      selectedFile = null;
-      previewImage.src = "";
-      previewImage.classList.add("hidden");
-      previewPlaceholder.textContent = "No image selected yet.";
-      predictButton.disabled = true;
-      resultText.textContent = "No prediction yet.";
+      resetPreview();
       return;
     }
 
     if (!["image/jpeg", "image/png"].includes(file.type)) {
       alert("Please upload a JPEG or PNG image.");
       fileInput.value = "";
-      selectedFile = null;
-      previewImage.src = "";
-      previewImage.classList.add("hidden");
-      previewPlaceholder.textContent = "No image selected yet.";
-      predictButton.disabled = true;
-      resultText.textContent = "No prediction yet.";
+      resetPreview();
       return;
     }
 
@@ -159,6 +186,12 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   predictButton.addEventListener("click", async () => {
+    if (!isLoggedIn) {
+      alert("Please log in to use digit identification.");
+      updatePredictionAccess();
+      return;
+    }
+
     if (!selectedFile) {
       alert("Please select an image first.");
       return;
@@ -195,4 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
       resultText.textContent = "Network error. Please try again.";
     }
   });
+
+  // Initial state
+  updatePredictionAccess();
 });
