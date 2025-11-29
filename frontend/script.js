@@ -268,11 +268,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
       console.log("Prediction response:", data);
 
-      if (data.digit !== undefined && data.digit !== null) {
-        resultText.textContent = `Predicted digit(s): ${data.digit}`;
+      if (data.no_digit || data.digits === null || data.digits === undefined || data.digits === "") {
+        resultText.textContent = "No digit detected in the image.";
       } else {
-        resultText.textContent = "Unexpected response from server.";
+        resultText.textContent = `Predicted digit(s): ${data.digits}`;
       }
+
     } catch (error) {
       console.error("Request error:", error);
       resultText.textContent = "Network error. Please try again.";
