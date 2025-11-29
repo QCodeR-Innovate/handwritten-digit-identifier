@@ -51,14 +51,14 @@ Built as an intern project by **Pushkar Chaturvedy (IIT Kharagpur)**.
 
 ```mermaid
 flowchart TD
-    U[User Browser] --> F[Frontend (Firebase Hosting)]
-    F --> B[Backend API (FastAPI on Render)]
-    B --> G[Gemini Vision API (Digits / NO_DIGIT)]
+    U[User Browser] --> F[Frontend Firebase Hosting]
+    F --> B[Backend API FastAPI on Render]
+    B --> G[Gemini Vision API]
     G --> B
     B --> F
 
     subgraph Auth
-        F --> A[Firebase Auth (Email + Password)]
+        F --> A[Firebase Authentication]
     end
 
 
