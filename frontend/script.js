@@ -269,7 +269,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Prediction response:", data);
 
       if (data.digit !== undefined && data.digit !== null) {
-        resultText.textContent = `Predicted digit: ${data.digit}`;
+        resultText.textContent = `Predicted digit(s): ${data.digit}`;
       } else {
         resultText.textContent = "Unexpected response from server.";
       }
