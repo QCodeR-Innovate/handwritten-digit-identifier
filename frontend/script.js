@@ -1,4 +1,7 @@
-// script.js
+// frontend/script.js
+
+// Your deployed backend base URL on Render
+const API_BASE_URL = "https://handwritten-digit-identifier.onrender.com";
 
 let selectedFile = null;
 
@@ -9,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const predictButton = document.getElementById("predictButton");
   const resultText = document.getElementById("resultText");
 
-  // When a file is selected
+  // Handle file selection
   fileInput.addEventListener("change", () => {
     const file = fileInput.files[0];
 
@@ -23,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Validate file type: only allow jpeg/png
+    // Only allow JPEG or PNG
     if (!["image/jpeg", "image/png"].includes(file.type)) {
       alert("Please upload a JPEG or PNG image.");
       fileInput.value = "";
@@ -51,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
     resultText.textContent = "Ready to predict.";
   });
 
-  // Click handler for Predict button
+  // Handle Predict button click
   predictButton.addEventListener("click", async () => {
     if (!selectedFile) {
       alert("Please select an image first.");
@@ -64,8 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      // For now, backend is running locally on port 8000
-      const response = await fetch("http://127.0.0.1:8000/predict", {
+      const response = await fetch(`${API_BASE_URL}/predict`, {
         method: "POST",
         body: formData,
       });
@@ -78,15 +80,16 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const data = await response.json();
+      console.log("Prediction response:", data);
+
       if (typeof data.digit === "number") {
         resultText.textContent = `Predicted digit: ${data.digit}`;
       } else {
         resultText.textContent = "Unexpected response from server.";
-        console.log("Response data:", data);
       }
     } catch (error) {
       console.error("Request error:", error);
-      resultText.textContent = "Network error. Please check if the backend is running.";
+      resultText.textContent = "Network error. Please check your connection.";
     }
   });
 });
