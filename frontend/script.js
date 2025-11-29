@@ -9,8 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const predictButton = document.getElementById("predictButton");
   const resultText = document.getElementById("resultText");
 
-  // When the label is clicked, it triggers the hidden file input automatically
-
+  // When a file is selected
   fileInput.addEventListener("change", () => {
     const file = fileInput.files[0];
 
@@ -52,21 +51,42 @@ document.addEventListener("DOMContentLoaded", () => {
     resultText.textContent = "Ready to predict.";
   });
 
-  // For now, this is a dummy handler (no backend call yet)
+  // Click handler for Predict button
   predictButton.addEventListener("click", async () => {
     if (!selectedFile) {
       alert("Please select an image first.");
       return;
     }
 
-    // Later we will send selectedFile to backend here
-    // For now, just simulate a prediction
     resultText.textContent = "Predicting...";
-    
-    setTimeout(() => {
-      // Dummy digit just for UI testing
-      const fakeDigit = 7;
-      resultText.textContent = `Predicted digit (dummy): ${fakeDigit}`;
-    }, 600);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      // For now, backend is running locally on port 8000
+      const response = await fetch("http://127.0.0.1:8000/predict", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Error response from backend:", errorData);
+        resultText.textContent = `Error: ${errorData.detail || "Failed to get prediction."}`;
+        return;
+      }
+
+      const data = await response.json();
+      if (typeof data.digit === "number") {
+        resultText.textContent = `Predicted digit: ${data.digit}`;
+      } else {
+        resultText.textContent = "Unexpected response from server.";
+        console.log("Response data:", data);
+      }
+    } catch (error) {
+      console.error("Request error:", error);
+      resultText.textContent = "Network error. Please check if the backend is running.";
+    }
   });
 });
