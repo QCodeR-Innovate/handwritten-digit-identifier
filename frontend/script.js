@@ -8,10 +8,11 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
+  sendPasswordResetEmail,
+  sendEmailVerification,
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-
-// TODO: Paste your firebaseConfig from Firebase console here:
+// Your existing firebaseConfig
 const firebaseConfig = {
   apiKey: "AIzaSyCwssU0kctnSS4oZsgt8qqNd3C7bY4XT50",
   authDomain: "handwritten-digit-identi-7c366.firebaseapp.com",
@@ -29,7 +30,8 @@ const auth = getAuth(app);
 const API_BASE_URL = "https://handwritten-digit-identifier.onrender.com";
 
 let selectedFile = null;
-let isLoggedIn = false;
+let currentUser = null;      // full Firebase user
+let isLoggedIn = false;      // logged in AND email verified
 
 document.addEventListener("DOMContentLoaded", () => {
   // Auth-related elements
@@ -39,6 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const signupButton = document.getElementById("signupButton");
   const loginButton = document.getElementById("loginButton");
   const logoutButton = document.getElementById("logoutButton");
+  const resetPasswordButton = document.getElementById("resetPasswordButton");
   const authMessage = document.getElementById("authMessage");
 
   // Prediction-related elements
@@ -47,14 +50,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const previewPlaceholder = document.getElementById("previewPlaceholder");
   const predictButton = document.getElementById("predictButton");
   const resultText = document.getElementById("resultText");
+  const predictCard = document.getElementById("predictCard");
 
   // ----- Helpers -----
   function showAuthMessage(msg) {
     authMessage.textContent = msg || "";
   }
 
-  function clearAuthInputs() {
+  function clearAuthInputs(full = false) {
     authPassword.value = "";
+    if (full) {
+      authEmail.value = "";
+    }
   }
 
   function resetPreview() {
@@ -63,41 +70,57 @@ document.addEventListener("DOMContentLoaded", () => {
     previewImage.classList.add("hidden");
     previewPlaceholder.textContent = isLoggedIn
       ? "No image selected yet."
-      : "Login required to use this feature.";
+      : "Login with a verified email to use this feature.";
     resultText.textContent = isLoggedIn
       ? "No prediction yet."
-      : "Please log in to use digit identification.";
+      : "Please log in and verify your email to use digit identification.";
     predictButton.disabled = true;
   }
 
-  // Enable/disable prediction UI based on login state
+  function updateAuthUI() {
+    if (currentUser) {
+      const verifiedText = currentUser.emailVerified ? "" : " (email not verified)";
+      authStatus.textContent = `Logged in as: ${currentUser.email}${verifiedText}`;
+      // Show current email in field
+      authEmail.value = currentUser.email;
+    } else {
+      authStatus.textContent = "Not logged in.";
+      clearAuthInputs(true);
+    }
+  }
+
+  // Enable/disable prediction UI based on login & verification state
   function updatePredictionAccess() {
     if (!isLoggedIn) {
-      // Lock everything
       fileInput.disabled = true;
       predictButton.disabled = true;
+      predictCard.classList.add("locked");
       resetPreview();
     } else {
-      // Allow selecting files
       fileInput.disabled = false;
+      predictCard.classList.remove("locked");
       resetPreview();
     }
   }
 
   // ----- Auth state listener -----
   onAuthStateChanged(auth, (user) => {
-    if (user) {
-      isLoggedIn = true;
-      authStatus.textContent = `Logged in as: ${user.email}`;
-      showAuthMessage("");
-    } else {
-      isLoggedIn = false;
-      authStatus.textContent = "Not logged in.";
-    }
+    currentUser = user || null;
+    isLoggedIn = !!(user && user.emailVerified);
+
+    updateAuthUI();
     updatePredictionAccess();
+
+    if (user && !user.emailVerified) {
+      showAuthMessage("Please verify your email. Check your inbox for a verification link.");
+    } else {
+      showAuthMessage("");
+    }
   });
 
   // ----- Auth actions -----
+
+  // Signup with email verification
   signupButton.addEventListener("click", async () => {
     const email = authEmail.value.trim();
     const password = authPassword.value.trim();
@@ -109,14 +132,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      showAuthMessage(`Signup successful. Welcome, ${userCred.user.email}!`);
-      clearAuthInputs();
+      await sendEmailVerification(userCred.user);
+      showAuthMessage(
+        `Signup successful. Verification email sent to ${userCred.user.email}. Please verify before using the app.`
+      );
+      clearAuthInputs(false);
     } catch (error) {
       console.error("Signup error:", error);
       showAuthMessage(error.message || "Signup failed.");
     }
   });
 
+  // Login
   loginButton.addEventListener("click", async () => {
     const email = authEmail.value.trim();
     const password = authPassword.value.trim();
@@ -128,22 +155,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const userCred = await signInWithEmailAndPassword(auth, email, password);
-      showAuthMessage(`Login successful. Hello, ${userCred.user.email}!`);
-      clearAuthInputs();
+      if (userCred.user.emailVerified) {
+        showAuthMessage(`Login successful. Hello, ${userCred.user.email}!`);
+      } else {
+        showAuthMessage(
+          "Logged in, but email is not verified. Please check your inbox for the verification link."
+        );
+      }
+      clearAuthInputs(false);
     } catch (error) {
       console.error("Login error:", error);
       showAuthMessage(error.message || "Login failed.");
     }
   });
 
+  // Logout
   logoutButton.addEventListener("click", async () => {
     try {
       await signOut(auth);
       showAuthMessage("Logged out successfully.");
-      clearAuthInputs();
+      clearAuthInputs(true);
     } catch (error) {
       console.error("Logout error:", error);
       showAuthMessage(error.message || "Logout failed.");
+    }
+  });
+
+  // Forgot / Reset password
+  resetPasswordButton.addEventListener("click", async () => {
+    const email = authEmail.value.trim();
+    if (!email) {
+      showAuthMessage("Enter your email above, then click reset password.");
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      showAuthMessage(`Password reset email sent to ${email}.`);
+    } catch (error) {
+      console.error("Password reset error:", error);
+      showAuthMessage(error.message || "Failed to send password reset email.");
     }
   });
 
@@ -151,9 +201,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   fileInput.addEventListener("change", () => {
     if (!isLoggedIn) {
-      // Shouldn't normally happen because input is disabled, but just in case
       fileInput.value = "";
-      alert("Please log in to use digit identification.");
+      alert("Please log in with a verified email to use digit identification.");
+      updatePredictionAccess();
       return;
     }
 
@@ -187,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   predictButton.addEventListener("click", async () => {
     if (!isLoggedIn) {
-      alert("Please log in to use digit identification.");
+      alert("Please log in with a verified email to use digit identification.");
       updatePredictionAccess();
       return;
     }
@@ -218,7 +268,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
       console.log("Prediction response:", data);
 
-      if (typeof data.digit === "number") {
+      if (data.digit !== undefined && data.digit !== null) {
         resultText.textContent = `Predicted digit: ${data.digit}`;
       } else {
         resultText.textContent = "Unexpected response from server.";
