@@ -13,6 +13,44 @@
       <p>Upload an image of a handwritten digit (0–9) and let the AI identify it.</p>
     </header>
 
+    <!-- Auth section -->
+    <section class="card" style="margin-bottom: 12px;">
+      <h2 style="font-size: 1.1rem; margin-bottom: 6px;">Login / Signup</h2>
+      <p id="authStatus" style="font-size: 0.85rem; color: #9ca3af; margin-bottom: 8px;">
+        Not logged in.
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px;">
+        <input
+          id="authEmail"
+          type="email"
+          placeholder="Email"
+          style="padding: 8px; border-radius: 8px; border: 1px solid #4b5563; background: #020617; color: #e5e7eb;"
+        />
+        <input
+          id="authPassword"
+          type="password"
+          placeholder="Password"
+          style="padding: 8px; border-radius: 8px; border: 1px solid #4b5563; background: #020617; color: #e5e7eb;"
+        />
+      </div>
+
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px;">
+        <button id="signupButton" style="flex: 1; padding: 8px; border-radius: 999px; border: none; font-size: 0.85rem; cursor: pointer; background: #2563eb; color: #e5e7eb;">
+          Sign up
+        </button>
+        <button id="loginButton" style="flex: 1; padding: 8px; border-radius: 999px; border: none; font-size: 0.85rem; cursor: pointer; background: #22c55e; color: #022c22;">
+          Log in
+        </button>
+        <button id="logoutButton" style="flex: 1; padding: 8px; border-radius: 999px; border: none; font-size: 0.85rem; cursor: pointer; background: #374151; color: #e5e7eb;">
+          Log out
+        </button>
+      </div>
+
+      <p id="authMessage" style="font-size: 0.8rem; color: #f97316;"></p>
+    </section>
+
+    <!-- Main digit identifier card -->
     <main class="card">
       <div class="upload-section">
         <label for="imageInput" class="file-label">
@@ -50,6 +88,7 @@
     </footer>
   </div>
 
-  <script src="script.js" defer></script>
+  <!-- IMPORTANT: script is now a module so we can use ES imports -->
+  <script type="module" src="script.js"></script>
 </body>
 </html>
