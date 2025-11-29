@@ -1,77 +1,62 @@
-# handwritten-digit-identifier
-Web app that identifies handwritten digits using Gemini API
-
-
 # Handwritten Digit Identifier 🧠✍️
 
-A web application that lets users upload an image of a **handwritten digit (0–9)** and uses **Google Gemini** to recognize the digit and display the result.
+A full-stack web app that lets users upload an image of **handwritten digits**, and uses **Google Gemini** to recognize **single or multiple digits**.  
 
-- **Live App:** https://handwritten-digit-identi-7c366.web.app  
-- **Backend API:** https://handwritten-digit-identifier.onrender.com  
+Access to the digit identifier is **protected by login + email verification** using Firebase Authentication.
 
-Built as an intern project by **Pushkar Chaturvedy**.
+- **Live App (Frontend)**: https://handwritten-digit-identi-7c366.web.app  
+- **Backend API (FastAPI)**: https://handwritten-digit-identifier.onrender.com  
+
+Built as an intern project by **Pushkar Chaturvedy (IIT Kharagpur)**.
 
 ---
 
 ## 🚀 Features
 
-- Upload an image containing a handwritten digit (0–9)
-- Supports **JPEG** and **PNG**
-- Live image **preview** before prediction
-- Uses **Gemini Vision API** to identify the digit
-- Clean, responsive UI (works on desktop & mobile)
-- Backend and frontend fully deployed and publicly accessible
+- Upload an image containing handwritten digits (`0–9`).
+- Supports **JPEG** and **PNG** formats.
+- Clean UI with **live image preview**.
+- Uses **Google Gemini Vision** to recognize:
+  - A single digit (`"5"`)
+  - A sequence of digits (`"42"`, `"2025"`)
+- Handles **“no digit detected”** explicitly (doesn’t confuse it with `0`).
+- Fully **login-gated digit identification**:
+  - Email/password **signup** and **login** (Firebase Auth)
+  - **Email verification required** before using the identifier
+  - **Forgot password** (password reset email)
 
 ---
 
 ## 🏗️ Tech Stack
 
-**Frontend:**
-
+**Frontend**
 - HTML, CSS, Vanilla JavaScript
+- Firebase Authentication (email/password)
 - Hosted on **Firebase Hosting**
 
-**Backend:**
-
+**Backend**
 - Python, **FastAPI**
-- **Uvicorn** ASGI server
+- Uvicorn (ASGI server)
 - Deployed on **Render**
 
-**AI:**
+**AI**
+- **Google Gemini** Vision model (`gemini-2.5-flash`)
 
-- **Google Gemini** (image understanding)
-
-**Other:**
-
+**Other**
 - Git & GitHub for version control
 
 ---
 
-## 🧬 Architecture
+## 🧬 Architecture Overview
 
-High-level data flow:
+```mermaid
+flowchart TD
+    A[User Browser] --> B[Firebase Hosting<br/>(Frontend HTML/CSS/JS)]
+    B --> C[FastAPI Backend<br/>on Render (/predict)]
+    C --> D[Gemini Vision API]
+    D --> C
+    C --> B
 
-```text
-[ User Browser ]
-      |
-      v
-[ Frontend (Firebase Hosting) ]
-  - HTML/CSS/JS
-  - Lets user upload an image
-  - Calls backend via fetch()
-      |
-      v
-POST /predict (image)
-      |
-      v
-[ Backend API (FastAPI on Render) ]
-  - Accepts image
-  - Sends image to Gemini Vision model
-  - Parses Gemini response to extract digit (0–9)
-      |
-      v
-JSON response: { "digit": <0-9> }
-      |
-      v
-[ Frontend ]
-  - Displays "Predicted digit: X" to user
+    subgraph Auth
+      B --> E[Firebase Auth<br/>(Email + Password)]
+    end
